@@ -1,15 +1,27 @@
-import xml.etree.ElementTree as ET
+import os
+import re
 
-uid = "11725393"  # Example UID
-xml_file = f'data/{uid}.xml'
+dir_list = os.listdir('data/')
 
-# Parse the XML file
-tree = ET.parse(xml_file)
-root = tree.getroot()
+for file_name in dir_list:
+    file_name = file_name.split('.')[0]
+    with open(f'data/{file_name}.xml', 'r') as file:
+        content = file.read()
+    print(file_name, " \n")
 
-# Extract specific sections (e.g., body content)
-for body in root.findall(".//body"):
-    for section in body:
-        text = ET.tostring(section, encoding="unicode")
+    
+    try: #extract body if body exists, if not -> go to next file_name
+        body = re.search(r'<body>(.*?)</body>', content, re.DOTALL).group(1)
+    except:
+        continue
+    
+    #Remove all XML tags
+    text = re.sub(r'<[^>]+>', '', body)
 
-print(text)
+    #filter out lines starting with a backslash
+    filtered_lines = [line for line in text.splitlines() if not line.strip().startswith('\\')]
+
+    cleaned_text = '\n'.join(filtered_lines)
+
+    with open(f'text/{file_name}.txt', 'w') as f:
+        f.write(cleaned_text)
